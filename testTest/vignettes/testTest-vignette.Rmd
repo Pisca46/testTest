@@ -1,0 +1,180 @@
+---
+title: "testTest-vignette"
+output: rmarkdown::html_vignette
+author: "Piska46"
+date: "`r Sys.Date()`"
+vignette: >
+  %\VignetteIndexEntry{testTest-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(testTest)
+```
+
+## Intro
+
+The sole purpuse of this tiny packacge (only 4 lines of code) is to demonstrate 
+a difference in verdicts made by 3 kinds of tests and to provide a remedy.
+
+The package used an environment with data that may be manipulated. And, in order to get 
+predictable results each test file should start with the same 'factory' data.  However, achieving this
+by detaching, unloading and re-requiring the package at the start of each test file will causes a test problem.
+
+Different way of testing rersulted in different verdicts.
+
+## Overview
+
+
+1. The intended behaviour of this package is demonstrated.
+
+2. The 'setMenu' function is tested with a simple use of 'testthat' This works well.
+
+3. The 'setMenu' function is tested with 'rcmdcheck()' Which works well.
+
+4. The 'setMenu' function is tested with 'devtools' Which caused a problem.
+
+## Demonstration of the testest package
+
+The 'factory set' menu is printed, then it is set to the new menu and the new menu 
+should be printed correctly
+
+```{r}
+printMenu ()
+setMenu ("Bacon")
+printMenu ()
+```
+Conclusion: it works perfectly.
+
+## The test file use for all tests
+
+The package test-file 'testTestTest.R' reads:
+
+```{r testTestTest.R}
+require(testthat)
+
+# laoding a fresh package
+if (isNamespaceLoaded ("testTest")) detach (package:testTest, unload = TRUE)
+require (testTest)
+testEnvir <- testTest:::testEnvir
+
+test_that ("testTestTest", {
+    expect_equal (testEnvir$menu, "spam")
+    testEnvir$menu <- "eggs"
+    expect_equal (testEnvir$menu, "eggs")
+
+    setMenu ("bacon")
+    expect_equal (testEnvir$menu, "bacon")   # fails with devtools::test() only
+})
+```
+
+Note that the testTest package is detached, unloaded, and re-required at the beginning.
+This is to make shure that the test is preformed on testEnvir data with 'factory' settings, i.e. on data
+that is not changed with 'setMenu' functions.
+
+However as shown below, this will cause a severe problem.
+
+## A simple test with testthat
+
+This is the output produced using source (".\tests\testthat\testTestTest.R")
+
+    Test passed 
+    Loading required package: testTest
+    Attaching package: ‘testTest’
+    The following object is masked _by_ ‘.GlobalEnv’:
+        testEnvir
+    Test passed 
+
+This is the output produced when pressing the RStudio top right "Run Test" button:
+
+    ==> Testing R file using 'testthat'
+    ℹ Loading testTest
+    [ FAIL 0 | WARN 0 | SKIP 0 | PASS 3 ]Loading required package: testTest
+    [ FAIL 0 | WARN 0 | SKIP 0 | PASS 4 ]
+    Test complete
+
+## Running rcmdcheck::rcmdcheck()
+
+This is the result when running rcmdcheck::rcmdcheck()
+
+── R CMD check results ───────────────────────────────────────────────────────────────────────────────────────────────────── testTest 0.1.0 ────
+Duration: 12.8s
+
+❯ checking DESCRIPTION meta-information ... WARNING
+  Non-standard license specification:
+    What license is it under?
+  Standardizable: FALSE
+
+❯ checking for missing documentation entries ... WARNING
+  Undocumented code objects:
+    ‘printMenu’ ‘setMenu’ ‘testEnvir’
+  All user-level objects in a package should have documentation entries.
+  See chapter ‘Writing R documentation files’ in the ‘Writing R
+  Extensions’ manual.
+
+0 errors ✔ | 2 warnings ✖ | 0 notes ✔
+>
+
+NOTE: No complains about the value of testEnvir$menu
+
+
+## Using devtools
+
+This is the result when running devtools:::test_active_file()
+
+    > devtools:::test_active_file()
+    [ FAIL 0 | WARN 0 | SKIP 0 | PASS 0 ]Loading required package: testTest
+    
+    Attaching package: ‘testTest’
+    
+    The following object is masked _by_ ‘.GlobalEnv’:
+    
+        testEnvir
+    
+    [ FAIL 1 | WARN 0 | SKIP 0 | PASS 2 ]
+    
+    ── Failure (testTestTest.R:15:5): testTestTest ─────────────────────────────────
+    testEnvir$menu (`actual`) not equal to "bacon" (`expected`).
+    
+    `actual`:   "eggs" 
+    `expected`: "bacon"
+    [ FAIL 1 | WARN 0 | SKIP 0 | PASS 2 ]
+
+
+It looks like devtools:::test_active_file() keeps using the 'old' testEnvir. i.e. the one
+that exists when the function in invoked. And, that 'setMenu ("bacon")' used - as required for this package - 
+the new environment made available after re-requiring the 'testTest' package.
+
+## Concluding considerations
+
+As devtools:::test_active_file() may produce a negative verdict for expect_... cases may be ok for the package at hand
+and for rcmdcheck or sourcing a test file, it may impose unnecessary drawbacks for some package developers. 
+This holds especially in case the package contains data that may extended by users who may e.g. add new 
+objects and/or add/modify object attributes and/or set/modify user preferences (e.g. for specific objects).
+
+However there does exists a simple work around.
+
+## A simple remedy
+
+Make a copy of all vulnerable 'factory' data in the environment under test and restore it at the 
+beginning of each test file.
+
+Add, e.g. a function like this in "testthat/helper.R"
+
+    resetMyData <- function () {
+        if (myBackup doesn't yet extsts) {
+            backup vulnarable data  # will be excecuted for the first testfile only
+        } else {
+            restore from backup
+        }
+    }
+
+And add resetMyData() to the beginning of each test file.
