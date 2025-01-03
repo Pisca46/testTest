@@ -10,7 +10,7 @@
 
 <meta name="author" content="Piska46">
 
-<meta name="date" content="2024-08-31">
+<meta name="date" content="2025-01-03">
 
 <title>testTest-vignette</title>
 
@@ -60,7 +60,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -433,27 +433,30 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">testTest-vignette</h1>
 <h4 class="author">Piska46</h4>
-<h4 class="date">2024-08-31</h4>
+<h4 class="date">2025-01-03</h4>
 
 
 
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(testTest)</span></code></pre></div>
 <div id="intro" class="section level2">
-<h2>Intro</h2>
+<h2>1. Intro</h2>
 <p>The sole purpuse of this tiny packacge (only 4 lines of code) is to
-demonstrate a difference in verdicts made by 3 kinds of tests and to
-provide a remedy.</p>
+demonstrate a ‘devtools’ problem by showing different verdicts made by 3
+kinds of tests.</p>
+<p>A work around is provided as well.</p>
 <p>The package used an environment with data that may be manipulated.
 And, in order to get predictable results each test file should start
 with the same ‘factory’ data. However, achieving this by detaching,
 unloading and re-requiring the package at the start of each test file
 will causes a test problem.</p>
-<p>Different ways of testing rersulted in different verdicts.</p>
+<p>The problem is reported in <a href="https://github.com/r-lib/devtools/issues/2577" class="uri">https://github.com/r-lib/devtools/issues/2577</a> as
+well.</p>
 </div>
 <div id="overview" class="section level2">
-<h2>Overview</h2>
+<h2>2. Overview</h2>
 <ol style="list-style-type: decimal">
 <li><p>The intended behaviour of this package is demonstrated.</p></li>
+<li><p>The test file use for all tests</p></li>
 <li><p>The ‘setMenu’ function is tested with a simple use of ‘testthat’
 This works well.</p></li>
 <li><p>The ‘setMenu’ function is tested with ‘rcmdcheck()’ Which works
@@ -465,7 +468,7 @@ problem.</p></li>
 </ol>
 </div>
 <div id="demonstration-of-the-testest-package" class="section level2">
-<h2>Demonstration of the testest package</h2>
+<h2>3.1. Demonstration of the testest package</h2>
 <p>The ‘factory set’ menu is printed, then it is set to the new menu and
 the new menu should be printed correctly</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">printMenu</span> ()</span>
@@ -476,7 +479,7 @@ the new menu should be printed correctly</p>
 <p>Conclusion: it works perfectly.</p>
 </div>
 <div id="the-test-file-use-for-all-tests" class="section level2">
-<h2>The test file use for all tests</h2>
+<h2>3.2 The test file use for all tests</h2>
 <p>The package test-file ‘testTestTest.R’ reads:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">require</span>(testthat)</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; Loading required package: testthat</span></span>
@@ -503,7 +506,7 @@ with ‘setMenu’ functions.</p>
 <p>However as shown below, this will cause a severe problem.</p>
 </div>
 <div id="a-simple-test-with-testthat" class="section level2">
-<h2>A simple test with testthat</h2>
+<h2>3.3 A simple test with testthat</h2>
 <p>This is the output produced using source (“..R”)</p>
 <pre><code>Test passed 
 Loading required package: testTest
@@ -520,7 +523,7 @@ Test” button:</p>
 Test complete</code></pre>
 </div>
 <div id="running-rcmdcheckrcmdcheck" class="section level2">
-<h2>Running rcmdcheck::rcmdcheck()</h2>
+<h2>3.4 Running rcmdcheck::rcmdcheck()</h2>
 <p>This is the result when running rcmdcheck::rcmdcheck()</p>
 <p>── R CMD check results
 ─────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -536,7 +539,7 @@ documentation files’ in the ‘Writing R Extensions’ manual.</p>
 <p>NOTE: No complains about the value of testEnvir$menu</p>
 </div>
 <div id="using-devtools" class="section level2">
-<h2>Using devtools</h2>
+<h2>3.5 Using devtools</h2>
 <p>This is the result when running devtools:::test_active_file()</p>
 <pre><code>&gt; devtools:::test_active_file()
 [ FAIL 0 | WARN 0 | SKIP 0 | PASS 0 ]Loading required package: testTest
@@ -562,7 +565,7 @@ environment made available after re-requiring the ‘testTest’
 package.</p>
 </div>
 <div id="concluding-considerations" class="section level2">
-<h2>Concluding considerations</h2>
+<h2>3.6 Concluding considerations</h2>
 <p>As devtools:::test_active_file() may produce a negative verdict for
 expect_… cases may be ok for the package at hand and for rcmdcheck or
 sourcing a test file, it may impose unnecessary drawbacks for some
@@ -573,7 +576,7 @@ add/modify object attributes and/or set/modify user preferences
 <p>However there does exists a simple work around.</p>
 </div>
 <div id="a-simple-remedy" class="section level2">
-<h2>A simple remedy</h2>
+<h2>3.7 A simple remedy</h2>
 <p>Make a copy of all vulnerable ‘factory’ data in the environment under
 test and restore it at the beginning of each test file.</p>
 <p>Add, e.g.&nbsp;a function like this in “testthat/helper.R”</p>
