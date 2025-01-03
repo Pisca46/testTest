@@ -20,29 +20,36 @@ knitr::opts_chunk$set(
 library(testTest)
 ```
 
-## Intro
+## 1. Intro
 
-The sole purpuse of this tiny packacge (only 4 lines of code) is to demonstrate 
-a difference in verdicts made by 3 kinds of tests and to provide a remedy.
+The sole purpuse of this tiny packacge (only 4 lines of code) is to demonstrate a 'devtools' 
+problem by showing different verdicts made by 3 kinds of tests.
+
+A work around is provided as well.
 
 The package used an environment with data that may be manipulated. And, in order to get 
 predictable results each test file should start with the same 'factory' data.  However, achieving this
 by detaching, unloading and re-requiring the package at the start of each test file will causes a test problem.
 
-Different way of testing rersulted in different verdicts.
+The problem is reported in https://github.com/r-lib/devtools/issues/2577  as well.
 
-## Overview
-
+## 2. Overview
 
 1. The intended behaviour of this package is demonstrated.
 
-2. The 'setMenu' function is tested with a simple use of 'testthat' This works well.
+2. The test file use for all tests
 
-3. The 'setMenu' function is tested with 'rcmdcheck()' Which works well.
+3. The 'setMenu' function is tested with a simple use of 'testthat' This works well.
 
-4. The 'setMenu' function is tested with 'devtools' Which caused a problem.
+4. The 'setMenu' function is tested with 'rcmdcheck()' Which works well.
 
-## Demonstration of the testest package
+5. The 'setMenu' function is tested with 'devtools' Which caused a problem.     
+
+6. Concluding considerations     
+
+7. A simple remedy
+
+## 3.1. Demonstration of the testest package
 
 The 'factory set' menu is printed, then it is set to the new menu and the new menu 
 should be printed correctly
@@ -54,7 +61,7 @@ printMenu ()
 ```
 Conclusion: it works perfectly.
 
-## The test file use for all tests
+## 3.2 The test file use for all tests
 
 The package test-file 'testTestTest.R' reads:
 
@@ -82,7 +89,7 @@ that is not changed with 'setMenu' functions.
 
 However as shown below, this will cause a severe problem.
 
-## A simple test with testthat
+## 3.3 A simple test with testthat
 
 This is the output produced using source (".\tests\testthat\testTestTest.R")
 
@@ -101,7 +108,7 @@ This is the output produced when pressing the RStudio top right "Run Test" butto
     [ FAIL 0 | WARN 0 | SKIP 0 | PASS 4 ]
     Test complete
 
-## Running rcmdcheck::rcmdcheck()
+## 3.4 Running rcmdcheck::rcmdcheck()
 
 This is the result when running rcmdcheck::rcmdcheck()
 
@@ -126,7 +133,7 @@ Duration: 12.8s
 NOTE: No complains about the value of testEnvir$menu
 
 
-## Using devtools
+## 3.5 Using devtools
 
 This is the result when running devtools:::test_active_file()
 
@@ -153,7 +160,7 @@ It looks like devtools:::test_active_file() keeps using the 'old' testEnvir. i.e
 that exists when the function in invoked. And, that 'setMenu ("bacon")' used - as required for this package - 
 the new environment made available after re-requiring the 'testTest' package.
 
-## Concluding considerations
+## 3.6 Concluding considerations
 
 As devtools:::test_active_file() may produce a negative verdict for expect_... cases may be ok for the package at hand
 and for rcmdcheck or sourcing a test file, it may impose unnecessary drawbacks for some package developers. 
@@ -162,7 +169,7 @@ objects and/or add/modify object attributes and/or set/modify user preferences (
 
 However there does exists a simple work around.
 
-## A simple remedy
+## 3.7 A simple remedy
 
 Make a copy of all vulnerable 'factory' data in the environment under test and restore it at the 
 beginning of each test file.
